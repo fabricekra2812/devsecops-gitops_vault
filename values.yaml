@@ -32,7 +32,7 @@ services:
     serviceName: gateway
     image:
       repository: fabricekonan28/gateway-service
-      tag: "3"
+      tag: "5"
     port: 8000
     replicas: 1
     exposed: true
@@ -55,7 +55,7 @@ services:
     serviceName: users-service
     image:
       repository: fabricekonan28/users-service
-      tag: "3"
+      tag: "5"
     port: 8001
     replicas: 1
     exposed: false
@@ -75,7 +75,7 @@ services:
     serviceName: products-service
     image:
       repository: fabricekonan28/products-service
-      tag: "3"
+      tag: "5"
     port: 8002
     replicas: 1
     exposed: false
@@ -95,7 +95,7 @@ services:
     serviceName: orders-service
     image:
       repository: fabricekonan28/orders-service
-      tag: "3"
+      tag: "5"
     port: 8003
     replicas: 1
     exposed: false
