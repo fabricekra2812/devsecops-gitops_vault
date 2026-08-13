@@ -1,5 +1,5 @@
 global:
-  namespace: microservices   # imposé par les start.sh (FQDN codés en dur)
+  namespace: microservices_vault   # imposé par les start.sh (FQDN codés en dur)
 
 ingress:
   enabled: true
