@@ -8,7 +8,9 @@ metadata:
     app: {{ $svc.serviceName }}
     {{- include "microservices.labels" $ | nindent 4 }}
 spec:
+  {{- if not $svc.hpa.enabled }}
   replicas: {{ $svc.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ $svc.serviceName }}
@@ -17,6 +19,19 @@ spec:
       labels:
         app: {{ $svc.serviceName }}
         {{- include "microservices.labels" $ | nindent 8 }}
+      {{- if $svc.needsDb }}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "microservices-role"
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{`{{- with secret "secret/data/database" -}}`}}
+          export POSTGRES_USER="{{`{{ .Data.data.POSTGRES_USER }}`}}"
+          export POSTGRES_PASSWORD="{{`{{ .Data.data.POSTGRES_PASSWORD }}`}}"
+          export POSTGRES_DB="{{`{{ .Data.data.POSTGRES_DB }}`}}"
+          export DATABASE_URL="{{`{{ .Data.data.DATABASE_URL }}`}}"
+          {{`{{- end -}}`}}
+      {{- end }}
     spec:
       containers:
         - name: {{ $svc.serviceName }}
