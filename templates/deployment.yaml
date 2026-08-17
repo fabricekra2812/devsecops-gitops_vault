@@ -7,29 +7,24 @@ metadata:
   labels:
     app: {{ $svc.serviceName }}
     {{- include "microservices.labels" $ | nindent 4 }}
-
 spec:
   {{- if not $svc.hpa.enabled }}
   replicas: {{ $svc.replicas }}
   {{- end }}
-
   selector:
     matchLabels:
       app: {{ $svc.serviceName }}
-
   template:
     metadata:
       labels:
         app: {{ $svc.serviceName }}
         {{- include "microservices.labels" $ | nindent 8 }}
-
       {{- if $svc.needsDb }}
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "microservices-role"
-
+        vault.hashicorp.com/tls-skip-verify: "true"
         vault.hashicorp.com/agent-inject-secret-database: "secret/data/database"
-
         vault.hashicorp.com/agent-inject-template-database: |
           {{`{{- with secret "secret/data/database" -}}`}}
           export POSTGRES_USER="{{`{{ .Data.data.POSTGRES_USER }}`}}"
@@ -37,60 +32,34 @@ spec:
           export POSTGRES_DB="{{`{{ .Data.data.POSTGRES_DB }}`}}"
           export DATABASE_URL="{{`{{ .Data.data.DATABASE_URL }}`}}"
           {{`{{- end -}}`}}
-
       {{- end }}
-
     spec:
-
       containers:
         - name: {{ $svc.serviceName }}
-
           image: "{{ $svc.image.repository }}:{{ $svc.image.tag }}"
-
           imagePullPolicy: IfNotPresent
-
           ports:
             - containerPort: {{ $svc.port }}
-
           envFrom:
             {{- if $svc.config }}
             - configMapRef:
                 name: {{ $svc.serviceName }}-config
             {{- end }}
-
             {{- if $svc.needsDb }}
             - secretRef:
                 name: db-credentials
             {{- end }}
-
           resources:
             {{- toYaml $svc.resources | nindent 12 }}
-
           readinessProbe:
             tcpSocket:
               port: {{ $svc.port }}
             initialDelaySeconds: 5
             periodSeconds: 10
-
           livenessProbe:
             tcpSocket:
               port: {{ $svc.port }}
             initialDelaySeconds: 10
             periodSeconds: 20
-
-          {{- if $svc.needsDb }}
-          volumeMounts:
-            - name: vault-ca
-              mountPath: /vault/tls
-              readOnly: true
-          {{- end }}
-
-      {{- if $svc.needsDb }}
-      volumes:
-        - name: vault-ca
-          secret:
-            secretName: vault-ca
-      {{- end }}
-
 ---
 {{- end }}
